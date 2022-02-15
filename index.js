@@ -21,23 +21,14 @@ class UserIDInfo extends Plugin {
     try {
       let userObject = await (await require('powercord/webpack').getModule(['acceptAgreements', 'getUser'])).getUser(String(id));
       let userName = userObject['username'] + '#' + userObject['discriminator'];
-      let avatarURL = !userObject['avatar'] ? 'Default avatar, no link available.' : `[Click here to open avatar link.](https://cdn.discordapp.com/avatars/${id}/${userObject['avatar']} "${userName.slice(-4)}'s avatar")`;
+      let avatarURL = !userObject['avatar'] ? 'Default avatar, no link or thumbnail available.' : `https://cdn.discordapp.com/avatars/${id}/${userObject['avatar']}`;
       let isBot = String(userObject['bot']);
-      let unixTime = (id / 4194304) + 1420070400000;
-      let jsTime = new Date(unixTime);
-      let humanTime = `${(jsTime.getMonth() + 1) + '/' + jsTime.getDate() + '/' + jsTime.getFullYear()} (MM/DD/YYYY)`;
-      function timeDifference(current, previous) { var msPerMinute = 60 * 1000; var msPerHour = msPerMinute * 60; var msPerDay = msPerHour * 24; var msPerMonth = msPerDay * 30; var msPerYear = msPerDay * 365; var elapsed = current - previous; if (elapsed < msPerMinute) { return Math.round(elapsed / 1000) + ' seconds ago' } else if (elapsed < msPerHour) { return Math.round(elapsed / msPerMinute) + ' minutes ago' } else if (elapsed < msPerDay) { return Math.round(elapsed / msPerHour) + ' hours ago' } else if (elapsed < msPerMonth) { return 'approximately ' + Math.round(elapsed / msPerDay) + ' days ago' } else if (elapsed < msPerYear) { return 'approximately ' + Math.round(elapsed / msPerMonth) + ' months ago' } else { return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago' } }
-      let currentTime = Date.now();
-      let relativeTime = timeDifference(currentTime, unixTime)
-      const embed = {
+      let timestamp = Math.trunc((parseInt(BigInt(id) >> 22n) + 1420070400000) / 1000);
+
+      let embed = {
         type: 'rich',
         title: `ID lookup for **${id}**`,
-        thumbnail: {
-          url: avatarURL,
-          proxy_url: avatarURL,
-          height: 128,
-          width: 128
-        },
+        color: 0x5865F2,
         fields: [{
           name: 'Username',
           value: userName,
@@ -52,14 +43,24 @@ class UserIDInfo extends Plugin {
           inline: true
         }, {
           name: 'Avatar',
-          value: avatarURL,
+          value: avatarURL.startsWith('Default') ? avatarURL : `[Click here to open avatar link.](${avatarURL} "${userName.slice(0, -5)}'s avatar")`,
           inline: false
         }, {
           name: 'Created',
-          value: `${humanTime} (${relativeTime}) Test: <t:${unixTime}:R>`,
+          value: `<t:${timestamp}> (<t:${timestamp}:R>)`,
           inline: false
         }]
       }
+
+      if (!avatarURL.startsWith('Default')) {
+        embed.thumbnail = {
+          url: avatarURL,
+          proxy_url: avatarURL,
+          height: 128,
+          width: 128
+        }
+      }
+
       return {
         result: embed,
         embed: true
