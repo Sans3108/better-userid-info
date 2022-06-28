@@ -9,10 +9,7 @@ class UserIDInfo extends Plugin {
       usage: '{c} <id>',
       description: 'Gets and displays user information from a user ID.',
       executor: (id) => {
-        if (id.toString().includes('@')) {
-          id = id.toString().split('!').pop().split('>')[0]
-        }
-        return this.getInfo(id)
+        return this.getInfo(id.toString().replace('<', '').replace('>', '').replace('!', '').replace('@', ''));
       }
     })
   }
@@ -67,7 +64,7 @@ class UserIDInfo extends Plugin {
       }
     } catch (err) {
       return {
-        result: 'Invalid ID.'
+        result: `Invalid ID.`
       }
     }
   }
